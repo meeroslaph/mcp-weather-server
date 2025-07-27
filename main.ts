@@ -50,7 +50,7 @@ server.tool(
             }
 
             const { latitude, longitude, name } = data.results[0];
-            const weatherUrl = `${WEATHER_API}?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m&current=temperature_2m,relative_humidity_2m`;
+            const weatherUrl = `${WEATHER_API}?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,uv_index&current=temperature_2m,relative_humidity_2m,uv_index`;
 
             try {
                 const weatherResponse = await fetch(weatherUrl);
@@ -58,6 +58,7 @@ server.tool(
 
                 const temp = weatherData.current?.temperature_2m;
                 const humidity = weatherData.current?.relative_humidity_2m;
+                const uv = weatherData.current?.uv_index;
                 let summary = `Weather for ${name} (lat: ${latitude}, lon: ${longitude}):\n`;
                 if (typeof temp === 'number') {
                     summary += `Temperature: ${temp}°C\n`;
@@ -65,7 +66,21 @@ server.tool(
                 if (typeof humidity === 'number') {
                     summary += `Relative Humidity: ${humidity}%\n`;
                 }
-                if (typeof temp !== 'number' && typeof humidity !== 'number') {
+                if (typeof uv === 'number') {
+                    summary += `UV Index: ${uv}\n`;
+                    if (uv < 3) {
+                        summary += 'UV level is low (1-2). Sun protection is not required unless outdoors for extended periods.\n';
+                    } else if (uv < 6) {
+                        summary += 'UV level is moderate (3-5). Sun protection is recommended: Slip on protective clothing, Slop on SPF 50+ sunscreen, Slap on a hat, Seek shade, Slide on sunglasses.\n';
+                    } else if (uv < 8) {
+                        summary += 'UV level is high (6-7). Sun protection is essential: Follow all five SunSmart steps.\n';
+                    } else if (uv < 11) {
+                        summary += 'UV level is very high (8-10). Minimize sun exposure and strictly follow all five SunSmart steps.\n';
+                    } else {
+                        summary += 'UV level is extreme (11+). Avoid being outdoors during peak UV times. Sun protection is critical.\n';
+                    }
+                }
+                if (typeof temp !== 'number' && typeof humidity !== 'number' && typeof uv !== 'number') {
                     summary += 'No current weather data available.';
                 }
 
